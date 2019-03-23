@@ -1,7 +1,5 @@
 package games
 
-import java.io.IOException
-
 import scalaz._
 import Scalaz._
 import zio._
@@ -38,16 +36,6 @@ object Hangman extends App {
     nextInt(Dictionary.length)
       .map(int => (Dictionary).lift(int).getOrElse("bug in the program").toLowerCase)
 
-  val hangmanGame: ZIO[Console with Random, IOException, Unit] =
-    for {
-      _    <- putStrLn("Functional Hangman")
-      name <- putStrLn("What is your name?") *> getStrLn
-      _    <- putStrLn(s"Welcome, $name")
-      word <- chooseWord
-      state = State(name, Set(), word)
-      _ <- renderState(state)
-      _ <- gameLoop(state)
-    } yield ()
 
   val getChoice: ZIO[Console, IOException, Char] =
     for {
@@ -59,23 +47,6 @@ object Hangman extends App {
         case Some(c) => ZIO.succeed(c)
       }
     } yield char
-
-  def gameLoop(state: State): ZIO[Console, IOException, State] =
-    for {
-      guess <- getChoice
-      state <- ZIO.succeed(state.copy(guesses = state.guesses + guess))
-      _     <- renderState(state)
-      loop <- if (state.playerWon)
-        putStrLn(s"Congratulations, ${state.name}, you won the game!!!").const(false)
-        else if (state.playerLost)
-          putStrLn(s"Sorry, ${state.name}, you lost the game. The word was ${state.word}")
-            .const(false)
-        else if (state.word.contains(guess))
-          putStrLn(s"You guessed correctly, ${state.name}, keep going!").const(true)
-        else
-          putStrLn(s"You guessed wrong, ${state.name}, try again.").const(true)
-      state <- if (loop) gameLoop(state) else ZIO.succeed(state)
-    } yield state
 
   def renderState(state: State): ZIO[Console, IOException, Unit] = {
     //
@@ -104,6 +75,34 @@ object Hangman extends App {
       _ <- putStrLn("")
     } yield ()
   }
+
+  def gameLoop(state: State): ZIO[Console, IOException, State] =
+    for {
+      guess <- getChoice
+      state <- ZIO.succeed(state.copy(guesses = state.guesses + guess))
+      _     <- renderState(state)
+      loop <- if (state.playerWon)
+        putStrLn(s"Congratulations, ${state.name}, you won the game!!!").const(false)
+        else if (state.playerLost)
+          putStrLn(s"Sorry, ${state.name}, you lost the game. The word was ${state.word}")
+            .const(false)
+        else if (state.word.contains(guess))
+          putStrLn(s"You guessed correctly, ${state.name}, keep going!").const(true)
+        else
+          putStrLn(s"You guessed wrong, ${state.name}, try again.").const(true)
+      state <- if (loop) gameLoop(state) else ZIO.succeed(state)
+    } yield state
+
+  val hangmanGame: ZIO[Console with Random, IOException, Unit] =
+    for {
+      _    <- putStrLn("Functional Hangman")
+      name <- putStrLn("What is your name?") *> getStrLn
+      _    <- putStrLn(s"Welcome, $name")
+      word <- chooseWord
+      state = State(name, Set(), word)
+      _ <- renderState(state)
+      _ <- gameLoop(state)
+    } yield ()
 
   override def run(args: List[String]) = hangmanGame.fold(_ => 1, _ => 0)
 
