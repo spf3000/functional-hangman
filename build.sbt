@@ -9,12 +9,9 @@ lazy val root = (project in file(".")).settings(
     List(
       organization := "alandevlin",
       scalaVersion := "2.12.8",
-      scalaOrganization := "org.typelevel",
-      scalaVersion := "2.12.4-bin-typelevel-4"
     )),
   name := "hangman",
-  libraryDependencies += "org.scalaz"  %% "scalaz-zio" % "0.3.1",
-  libraryDependencies += "org.scalaz"  %% "scalaz-core" % "7.2.26",
-  libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.3",
-  libraryDependencies += scalaTest     % Test
+  libraryDependencies += "org.scalaz" %% "scalaz-zio" % "1.0-RC1",
+  libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.26",
+  libraryDependencies += scalaTest    % Test
 )
